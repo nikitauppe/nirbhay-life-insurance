@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NirbhayLife - My Policies</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="topbar"><div class="brand">Nirbhay<span>Life</span> Insurance</div></div>
+
+  <div class="card">
+    <div class="top">
+      <h2>My Policies</h2>
+      <div><span id="who"></span> <button class="grey" onclick="logout()">Logout</button></div>
+    </div>
+    <p id="msg"></p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Type</th><th>Holder</th><th>Premium</th>
+              <th>Sum Assured</th><th>Start</th><th>End</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p id="empty" class="empty hidden">No policies are assigned to you yet.</p>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const me = requireRole('USER');
+    if (me) {
+      $('who').textContent = 'Hi, ' + me.username;
+      loadMine();
+    }
+
+    async function loadMine() {
+      try {
+        const res = await api('/policies/my');
+        if (!res.ok) { $('msg').className = 'err'; $('msg').textContent = 'Could not load policies'; return; }
+        const list = await res.json();
+        const tbody = $('rows');
+        tbody.innerHTML = '';
+        $('empty').classList.toggle('hidden', list.length > 0);
+        list.forEach(p => {
+          const tr = document.createElement('tr');
+          cell(tr, p.id); cell(tr, p.policyType); cell(tr, p.holderName);
+          cell(tr, p.premium); cell(tr, p.sumAssured);
+          cell(tr, p.startDate); cell(tr, p.endDate);
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        $('msg').className = 'err';
+        $('msg').textContent = 'Cannot reach server';
+      }
+    }
+  </script>
+</body>
+</html>

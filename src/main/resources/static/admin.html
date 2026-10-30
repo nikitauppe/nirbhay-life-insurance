@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NirbhayLife - Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin">
+  <div class="topbar"><div class="brand">Nirbhay<span>Life</span> Insurance</div></div>
+
+  <div class="card">
+    <div class="top">
+      <h2>Admin Panel</h2>
+      <div><span id="who"></span> <button class="grey" onclick="logout()">Logout</button></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" id="tabPolicies">Policies</button>
+      <button class="tab" id="tabUsers">Users</button>
+    </div>
+  </div>
+
+  <!-- POLICIES -->
+  <div id="policiesView">
+    <div class="card">
+      <h3 id="formTitle">Add Policy</h3>
+      <div class="grid">
+        <div class="field">
+          <label for="policyType">Policy type</label>
+          <select id="policyType">
+            <option>Health</option><option>Vehicle</option><option>Property</option>
+            <option>Travel</option><option>Life</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="holderName">Holder name</label>
+          <input id="holderName" placeholder="Holder name">
+        </div>
+        <div class="field">
+          <label for="premium">Premium</label>
+          <input id="premium" type="number" placeholder="Premium">
+        </div>
+        <div class="field">
+          <label for="sumAssured">Sum assured</label>
+          <input id="sumAssured" type="number" placeholder="Sum assured">
+        </div>
+        <div class="field">
+          <label for="startDate">Start date</label>
+          <input id="startDate" type="date">
+        </div>
+        <div class="field">
+          <label for="endDate">End date</label>
+          <input id="endDate" type="date">
+        </div>
+        <div class="field">
+          <label for="userId">Assign to user</label>
+          <select id="userId"></select>
+        </div>
+      </div>
+      <button id="saveBtn">Add Policy</button>
+      <button class="grey hidden" id="cancelBtn">Cancel Edit</button>
+      <p id="msg"></p>
+    </div>
+
+    <div class="card">
+      <div class="bar">
+        <input id="searchType" placeholder="Search by type (e.g. Health)">
+        <button id="searchBtn">Search</button>
+        <button class="grey" id="allBtn">Show All</button>
+        <select id="sortBy">
+          <option value="">Sort by...</option>
+          <option value="premium">Premium</option>
+          <option value="sumAssured">Sum Assured</option>
+          <option value="holderName">Holder Name</option>
+          <option value="startDate">Start Date</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Type</th><th>Holder</th><th>Premium</th><th>Sum Assured</th>
+                <th>Start</th><th>End</th><th>Assigned To</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="usersView" class="hidden">
+    <div class="card">
+      <h3>All Users</h3>
+      <p id="userMsg"></p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+          <tbody id="userRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let editingId = null;
+    const me = requireRole('ADMIN');
+    if (me) {
+      $('who').textContent = 'Hi, ' + me.username;
+      loadUsers();
+      loadPolicies('/policies');
+    }
+
+    // ---------- Tabs ----------
+    function showTab(policies) {
+      $('policiesView').classList.toggle('hidden', !policies);
+      $('usersView').classList.toggle('hidden', policies);
+      $('tabPolicies').classList.toggle('active', policies);
+      $('tabUsers').classList.toggle('active', !policies);
+    }
+    $('tabPolicies').onclick = () => showTab(true);
+    $('tabUsers').onclick = () => { showTab(false); loadUsers(); };
+
+    function showMsg(el, text, ok) { el.className = ok ? 'ok' : 'err'; el.textContent = text; }
+
+    // ---------- Users ----------
+    async function loadUsers() {
+      const res = await api('/users');
+      if (!res.ok) { showMsg($('userMsg'), 'Could not load users', false); return; }
+      const users = await res.json();
+
+      const sel = $('userId');
+      const chosen = sel.value;
+      sel.innerHTML = '';
+      const none = document.createElement('option');
+      none.value = ''; none.textContent = '-- Unassigned --';
+      sel.appendChild(none);
+      users.filter(u => u.role === 'USER').forEach(u => {
+        const o = document.createElement('option');
+        o.value = u.id; o.textContent = u.username + ' (id ' + u.id + ')';
+        sel.appendChild(o);
+      });
+      sel.value = chosen;
+
+      const tb = $('userRows');
+      tb.innerHTML = '';
+      users.forEach(u => {
+        const tr = document.createElement('tr');
+        cell(tr, u.id); cell(tr, u.username); cell(tr, u.email); cell(tr, u.role);
+        const td = document.createElement('td');
+        if (u.role !== 'ADMIN') td.appendChild(btn('Delete', 'red', () => removeUser(u)));
+        tr.appendChild(td);
+        tb.appendChild(tr);
+      });
+    }
+
+    async function removeUser(u) {
+      if (!confirm('Delete user "' + u.username + '"? Their policies will become unassigned.')) return;
+      const res = await api('/users/' + u.id, { method: 'DELETE' });
+      showMsg($('userMsg'), await res.text(), res.ok);
+      loadUsers();
+      loadPolicies('/policies');
+    }
+
+    // ---------- Policies ----------
+    async function loadPolicies(url) {
+      try {
+        const res = await api(url);
+        if (!res.ok) { showMsg($('msg'), 'Could not load policies', false); return; }
+        render(await res.json());
+      } catch (e) {
+        showMsg($('msg'), 'Cannot reach server', false);
+      }
+    }
+
+    function render(list) {
+      const tbody = $('rows');
+      tbody.innerHTML = '';
+      list.forEach(p => {
+        const tr = document.createElement('tr');
+        cell(tr, p.id); cell(tr, p.policyType); cell(tr, p.holderName);
+        cell(tr, p.premium); cell(tr, p.sumAssured);
+        cell(tr, p.startDate); cell(tr, p.endDate);
+        cell(tr, p.assignedTo || '-');
+        const td = document.createElement('td');
+        td.appendChild(btn('Edit', '', () => startEdit(p)));
+        td.appendChild(btn('Delete', 'red', () => removePolicy(p.id)));
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function readForm() {
+      return {
+        policyType: $('policyType').value,
+        holderName: $('holderName').value.trim(),
+        premium: Number($('premium').value),
+        sumAssured: Number($('sumAssured').value),
+        startDate: $('startDate').value || null,
+        endDate: $('endDate').value || null,
+        userId: $('userId').value ? Number($('userId').value) : null
+      };
+    }
+
+    function clearForm() {
+      editingId = null;
+      $('holderName').value = '';
+      $('premium').value = '';
+      $('sumAssured').value = '';
+      $('startDate').value = '';
+      $('endDate').value = '';
+      $('userId').value = '';
+      $('formTitle').textContent = 'Add Policy';
+      $('saveBtn').textContent = 'Add Policy';
+      $('cancelBtn').classList.add('hidden');
+    }
+
+    function startEdit(p) {
+      editingId = p.id;
+      $('policyType').value = p.policyType;
+      $('holderName').value = p.holderName;
+      $('premium').value = p.premium;
+      $('sumAssured').value = p.sumAssured;
+      $('startDate').value = p.startDate || '';
+      $('endDate').value = p.endDate || '';
+      $('userId').value = p.userId ?? '';
+      $('formTitle').textContent = 'Edit Policy #' + p.id;
+      $('saveBtn').textContent = 'Update Policy';
+      $('cancelBtn').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    }
+
+    $('cancelBtn').onclick = clearForm;
+
+    $('saveBtn').onclick = async () => {
+      const url = editingId ? '/policies/' + editingId : '/policies';
+      const res = await api(url, { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(readForm()) });
+      if (res.ok) {
+        showMsg($('msg'), editingId ? 'Policy updated' : 'Policy added', true);
+        clearForm();
+        loadPolicies('/policies');
+      } else {
+        showMsg($('msg'), res.status === 400 ? 'Invalid input: check all fields' : 'Save failed', false);
+      }
+    };
+
+    async function removePolicy(id) {
+      if (!confirm('Delete policy #' + id + '?')) return;
+      const res = await api('/policies/' + id, { method: 'DELETE' });
+      showMsg($('msg'), res.ok ? 'Policy deleted' : 'Delete failed', res.ok);
+      loadPolicies('/policies');
+    }
+
+    $('searchBtn').onclick = () => {
+      const t = $('searchType').value.trim();
+      if (t) loadPolicies('/policies/type/' + encodeURIComponent(t));
+    };
+    $('allBtn').onclick = () => { $('searchType').value = ''; $('sortBy').value = ''; loadPolicies('/policies'); };
+    $('sortBy').onchange = () => { if ($('sortBy').value) loadPolicies('/policies/sort/' + $('sortBy').value); };
+  </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NirbhayLife Insurance - Login</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #fff;
+      background: linear-gradient(135deg, #0b2a5b 0%, #1558b0 50%, #0fa3a3 100%);
+      position: relative;
+      overflow-x: hidden;
+    }
+    .blob { position: fixed; border-radius: 50%; filter: blur(60px); opacity: .35; z-index: 0; }
+    .b1 { width: 320px; height: 320px; background: #ffb703; top: -80px; left: -80px; }
+    .b2 { width: 380px; height: 380px; background: #00c2a8; bottom: -120px; right: -100px; }
+
+    .topbar {
+      position: relative; z-index: 2;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 32px;
+    }
+    .brand { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+    .brand span { color: #ffb703; }
+    .admin-link {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.5);
+      color: #fff; padding: 9px 18px; border-radius: 24px;
+      cursor: pointer; font-size: 14px;
+    }
+    .admin-link:hover { background: #ffb703; color: #0b2a5b; border-color: #ffb703; }
+
+    .wrap {
+      position: relative; z-index: 1;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+      gap: 48px; padding: 20px 32px 60px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .hero { flex: 1 1 380px; max-width: 480px; }
+    .hero h1 { font-size: 38px; line-height: 1.2; margin: 16px 0; }
+    .hero h1 span { color: #ffb703; }
+    .hero p { opacity: .92; line-height: 1.6; }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .chip { background: rgba(255,255,255,.16); padding: 8px 14px; border-radius: 20px; font-size: 14px; }
+
+    .login {
+      flex: 1 1 340px; max-width: 400px;
+      background: #fff; color: #222;
+      border-radius: 16px; padding: 30px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.3);
+      border-top: 6px solid #1a73e8;
+    }
+    .login.admin { border-top-color: #ffb703; }
+    .login h2 { color: #0b2a5b; font-size: 26px; }
+    .login .sub { color: #666; font-size: 14px; margin: 4px 0 16px; }
+    .login input {
+      width: 100%; padding: 12px; margin: 6px 0;
+      border: 1px solid #ccc; border-radius: 8px; font-size: 15px;
+    }
+    .login input:focus { outline: 2px solid #1a73e8; border-color: transparent; }
+    .login.admin input:focus { outline-color: #ffb703; }
+    .login button {
+      width: 100%; padding: 12px; margin-top: 10px;
+      border: 0; border-radius: 8px; cursor: pointer;
+      font-size: 16px; font-weight: 600;
+      background: #1a73e8; color: #fff;
+    }
+    .login button:hover { background: #1558b0; }
+    .login.admin button { background: #ffb703; color: #0b2a5b; }
+    .login.admin button:hover { background: #f4a100; }
+    .link { color: #1a73e8; cursor: pointer; text-align: center; margin-top: 14px; font-size: 14px; }
+    #msg { margin-top: 12px; font-size: 14px; text-align: center; }
+    .ok { color: green; }
+    .err { color: #d93025; }
+    .hidden { display: none; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 14px 16px; }
+      .brand { font-size: 18px; }
+      .wrap { padding: 10px 16px 40px; gap: 28px; }
+      .hero h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+
+  <div class="topbar">
+    <div class="brand">Nirbhay<span>Life</span> Insurance</div>
+    <button class="admin-link" id="adminBtn">Admin Login</button>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <svg width="90" height="90" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M32 4 8 14v16c0 15 10 26 24 30 14-4 24-15 24-30V14L32 4z" fill="#ffb703"/>
+        <path d="M22 32l8 8 14-16" fill="none" stroke="#0b2a5b" stroke-width="5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>Live <span>fearless</span>, stay protected</h1>
+      <p>Manage and view your insurance policies in one safe place. Simple, clear and always with you.</p>
+      <div class="chips">
+        <div class="chip">❤️ Health</div>
+        <div class="chip">🚗 Vehicle</div>
+        <div class="chip">🏠 Property</div>
+        <div class="chip">✈️ Travel</div>
+        <div class="chip">🛡️ Life</div>
+      </div>
+    </div>
+
+    <div class="login" id="card">
+      <h2 id="title">User Login</h2>
+      <p class="sub" id="subtitle">Login to view your policies</p>
+      <input id="username" placeholder="Username" autocomplete="username">
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+      <input id="email" type="email" placeholder="Email" class="hidden">
+      <button id="submitBtn">Login</button>
+      <p id="msg"></p>
+      <p class="link" id="toggle">New user? Register</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let mode = 'user';        // 'user' or 'admin'
+    let isRegister = false;
+    sessionStorage.clear();
+
+    function render() {
+      const admin = mode === 'admin';
+      $('card').classList.toggle('admin', admin);
+      $('title').textContent = admin ? 'Admin Login' : (isRegister ? 'Create Account' : 'User Login');
+      $('subtitle').textContent = admin ? 'Authorized staff only'
+        : (isRegister ? 'Register to view your policies' : 'Login to view your policies');
+      $('email').classList.toggle('hidden', admin || !isRegister);
+      $('submitBtn').textContent = admin ? 'Login as Admin' : (isRegister ? 'Register' : 'Login');
+      $('toggle').classList.toggle('hidden', admin);
+      $('toggle').textContent = isRegister ? 'Already registered? Login' : 'New user? Register';
+      $('adminBtn').textContent = admin ? 'User Login' : 'Admin Login';
+      $('msg').textContent = '';
+    }
+
+    function say(text, ok) {
+      $('msg').className = ok ? 'ok' : 'err';
+      $('msg').textContent = text;
+    }
+
+    $('adminBtn').onclick = () => {
+      mode = mode === 'admin' ? 'user' : 'admin';
+      isRegister = false;
+      render();
+    };
+
+    $('toggle').onclick = () => {
+      isRegister = !isRegister;
+      render();
+    };
+
+    ['username', 'password', 'email'].forEach(id => {
+      $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('submitBtn').click(); });
+    });
+
+    $('submitBtn').onclick = async () => {
+      const username = $('username').value.trim();
+      const password = $('password').value;
+      if (!username || !password) { say('Enter username and password', false); return; }
+
+      try {
+        if (!isRegister) {
+          const header = basicHeader(username, password);
+          const res = await fetch('/auth/me', { headers: { 'Authorization': header } });
+          if (!res.ok) { say('Invalid username or password', false); return; }
+          const me = await res.json();
+
+          if (mode === 'admin' && me.role !== 'ADMIN') {
+            say('This is not an admin account', false); return;
+          }
+          if (mode === 'user' && me.role === 'ADMIN') {
+            say('Admins: please use Admin Login (top right)', false); return;
+          }
+
+          sessionStorage.setItem('auth', header);
+          sessionStorage.setItem('me', JSON.stringify(me));
+          window.location.href = me.role === 'ADMIN' ? 'admin.html' : 'user.html';
+        } else {
+          const res = await fetch('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, email: $('email').value.trim() })
+          });
+          const text = await res.text();
+          if (res.ok) {
+            isRegister = false;
+            render();
+            say('Registered! Now login.', true);
+          } else {
+            say(res.status === 400 ? 'Invalid input: check all fields' : text, false);
+          }
+        }
+      } catch (e) {
+        say('Cannot reach server. Is the app running?', false);
+      }
+    };
+
+    render();
+  </script>
+</body>
+</html>
